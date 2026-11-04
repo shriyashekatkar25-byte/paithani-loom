@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paithani Loom · SHRIYA.EXE</title>
+  <meta name="description" content="A tapestry-weave compiler and WebGL silk renderer for Paithani-inspired textiles. Design a motif, compose a pallu, count the bobbins, watch the shot silk turn." />
+  <meta name="theme-color" content="#0A1D1A" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230A1D1A'/%3E%3Cpath d='M6 26 L16 6 L26 26 Z' fill='none' stroke='%23D9B45E' stroke-width='2.5'/%3E%3Cpath d='M11 26 L16 16 L21 26' fill='%23C2185B'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=JetBrains+Mono:wght@400;600&family=Martel:wght@400;700&family=Rozha+One&family=Syne:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <a class="skip" href="#panel">Skip to the loom controls</a>
+  <div id="boot" class="boot" aria-hidden="true">
+    <div class="boot-warp"></div>
+    <p class="boot-word"><span class="dev">पैठणी माग</span><span>warping the loom…</span></p>
+  </div>
+
+  <header class="top">
+    <div class="brand">
+      <p class="dev brand-dev" lang="mr">पैठणी माग</p>
+      <h1><em>Paithani</em> <span>Loom</span></h1>
+      <p class="brand-sub">a tapestry-weave compiler &amp; silk renderer · <span class="mono">SHRIYA.EXE · drop 003</span></p>
+    </div>
+    <div class="top-actions">
+      <button class="chip" id="btnSound" aria-pressed="false" title="Loom sounds (original Web Audio synthesis)">Sound off</button>
+      <button class="chip" id="btnMotion" aria-pressed="false" title="Reduce motion">Motion: auto</button>
+      <a class="chip" href="#notes">How it works</a>
+    </div>
+  </header>
+
+  <main class="atelier">
+    <section class="stage" aria-label="Silk renderer">
+      <canvas id="silk" role="img" aria-label="A hanging length of woven silk showing the current design"></canvas>
+      <div id="silkFallback" class="fallback" hidden></div>
+      <p id="silkDesc" class="sr-only" aria-live="polite"></p>
+      <div class="stage-hud">
+        <p class="hud-hint">Drag to turn the cloth · scroll or pinch to come closer · <kbd>←</kbd><kbd>→</kbd> on the stage</p>
+        <div class="hud-row">
+          <div class="seg" role="group" aria-label="View">
+            <button class="chip" data-view="drape" aria-pressed="true">Drape</button>
+            <button class="chip" data-view="pallu" aria-pressed="false">Pallu</button>
+            <button class="chip" data-view="macro" aria-pressed="false">Thread</button>
+          </div>
+          <label class="mini">Breeze <input id="wind" type="range" min="0" max="1.6" step="0.05" value="1" /></label>
+          <button class="chip" id="btnLamp" aria-pressed="true">Lamp sweep</button>
+          <button class="chip gold" id="btnWeave">▶ Weave it</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel" aria-label="Loom controls">
+      <div class="warp-rail" aria-hidden="true"></div>
+      <div class="tabs" role="tablist" aria-label="Stages of making">
+        <button role="tab" id="tab-naksha" aria-controls="pane-naksha" aria-selected="true"><span class="dev num">१</span><span class="dev">नक्षी</span> Motif</button>
+        <button role="tab" id="tab-mandani" aria-controls="pane-mandani" aria-selected="false" tabindex="-1"><span class="dev num">२</span><span class="dev">मांडणी</span> Layout</button>
+        <button role="tab" id="tab-loom" aria-controls="pane-loom" aria-selected="false" tabindex="-1"><span class="dev num">३</span><span class="dev">माग</span> Loom</button>
+        <button role="tab" id="tab-library" aria-controls="pane-library" aria-selected="false" tabindex="-1"><span class="dev num">४</span><span class="dev">संग्रह</span> Keep</button>
+      </div>
+
+      <!-- 1 · Motif atelier -->
+      <div class="pane" role="tabpanel" id="pane-naksha" aria-labelledby="tab-naksha">
+        <p class="lede">Draw a figure on the naksha (the weaver's graph). Each square is a bundle of threads; each colour run will need its own bobbin.</p>
+        <div class="editor-wrap">
+          <canvas id="editor" class="editor" tabindex="0" aria-label="Motif grid, 40 by 40. Arrow keys move, Space paints."></canvas>
+          <div class="tools">
+            <div class="seg" role="radiogroup" aria-label="Tool" id="tools">
+              <button class="chip" role="radio" data-tool="pen" aria-checked="true" title="Pen (P)">Pen</button>
+              <button class="chip" role="radio" data-tool="line" aria-checked="false" title="Line (L)">Line</button>
+              <button class="chip" role="radio" data-tool="fill" aria-checked="false" title="Fill (F)">Fill</button>
+              <button class="chip" role="radio" data-tool="erase" aria-checked="false" title="Erase (E)">Erase</button>
+              <button class="chip" role="radio" data-tool="pick" aria-checked="false" title="Pick colour (I)">Pick</button>
+            </div>
+            <button class="chip" id="btnMirror" aria-pressed="false" title="Mirror (M)">Mirror ⟷</button>
+            <button class="chip" id="btnUndo" title="Undo (Ctrl+Z)">Undo</button>
+            <button class="chip" id="btnClear">Clear</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label" id="lbl-ink">Thread</span>
+          <div class="swatches" id="inkSwatches" role="radiogroup" aria-labelledby="lbl-ink"></div>
+          <p class="swatch-name" id="inkName" aria-live="polite"></p>
+        </div>
+        <div class="row">
+          <label class="field grow"><span class="label">Start from the library</span>
+            <select id="seedMotif"></select>
+          </label>
+          <button class="btn" id="btnSeed">Load figure</button>
+        </div>
+        <div class="row">
+          <button class="btn gold" id="btnUseMotif">Weave this into the pallu →</button>
+          <p class="note" id="editorStat" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <!-- 2 · Layout -->
+      <div class="pane" role="tabpanel" id="pane-mandani" aria-labelledby="tab-mandani" hidden>
+        <div class="presets" role="group" aria-label="Presets">
+          <button class="chip" data-preset="0">Vangi · Morpankhi</button>
+          <button class="chip" data-preset="1">Chandrakala night</button>
+          <button class="chip" data-preset="2">Pophali · Rani</button>
+          <button class="chip" data-preset="3">Firozi silver</button>
+          <button class="chip gold" id="btnSurprise">Surprise me</button>
+        </div>
+        <fieldset><legend>Body <span class="dev">अंग</span></legend>
+          <p class="note">Different warp and weft colours make the body change colour as it moves: <em>dhoop-chhaon</em>, sun-and-shade.</p>
+          <div class="field"><span class="label" id="lbl-bodyWarp">Warp (lengthwise)</span><div class="swatches" data-param="bodyWarp" role="radiogroup" aria-labelledby="lbl-bodyWarp"></div></div>
+          <div class="field"><span class="label" id="lbl-bodyWeft">Weft (crosswise)</span><div class="swatches" data-param="bodyWeft" role="radiogroup" aria-labelledby="lbl-bodyWeft"></div></div>
+          <div class="grid2">
+            <label class="field"><span class="label">Butti</span><select data-param="butti" data-motifs="small"></select></label>
+            <label class="field"><span class="label">Butti size <output data-for="buttiSize"></output></span><input type="range" data-param="buttiSize" min="5" max="15" step="1" /></label>
+            <label class="field"><span class="label">Butti spacing <output data-for="buttiSpacing"></output></span><input type="range" data-param="buttiSpacing" min="12" max="40" step="1" /></label>
+          </div>
+          <div class="field"><span class="label" id="lbl-buttiColor">Butti thread</span><div class="swatches" data-param="buttiColor" role="radiogroup" aria-labelledby="lbl-buttiColor"></div></div>
+        </fieldset>
+        <fieldset><legend>Border <span class="dev">काठ</span></legend>
+          <div class="field"><span class="label" id="lbl-borderColor">Border (kadiyal: warp = weft)</span><div class="swatches" data-param="borderColor" role="radiogroup" aria-labelledby="lbl-borderColor"></div></div>
+          <div class="field"><span class="label" id="lbl-naraliColor">Narali teeth</span><div class="swatches" data-param="naraliColor" role="radiogroup" aria-labelledby="lbl-naraliColor"></div></div>
+          <label class="field"><span class="label">Border width <output data-for="borderWidth"></output></span><input type="range" data-param="borderWidth" min="8" max="30" step="1" /></label>
+        </fieldset>
+        <fieldset><legend>Pallu <span class="dev">पदर</span></legend>
+          <div class="grid2">
+            <label class="field"><span class="label">Figure</span><select data-param="palluMotif" data-motifs="all"></select></label>
+            <label class="field"><span class="label">Rows <output data-for="palluRows"></output></span><input type="range" data-param="palluRows" min="1" max="3" step="1" /></label>
+            <label class="field"><span class="label">Pallu length <output data-for="palluLength"></output></span><input type="range" data-param="palluLength" min="60" max="200" step="2" /></label>
+            <label class="check"><input type="checkbox" data-param="facing" /> Pairs face each other</label>
+          </div>
+          <div class="field"><span class="label" id="lbl-palluGround">Ground</span><div class="swatches" data-param="palluGround" data-only="12,13,1,2" role="radiogroup" aria-labelledby="lbl-palluGround"></div></div>
+          <div class="field"><span class="label" id="lbl-palluP">Figure · main</span><div class="swatches" data-param="palluP" role="radiogroup" aria-labelledby="lbl-palluP"></div></div>
+          <div class="field"><span class="label" id="lbl-palluS">Figure · second</span><div class="swatches" data-param="palluS" role="radiogroup" aria-labelledby="lbl-palluS"></div></div>
+          <div class="field"><span class="label" id="lbl-palluA">Figure · accent</span><div class="swatches" data-param="palluA" role="radiogroup" aria-labelledby="lbl-palluA"></div></div>
+        </fieldset>
+      </div>
+
+      <!-- 3 · Loom ledger -->
+      <div class="pane" role="tabpanel" id="pane-loom" aria-labelledby="tab-loom" hidden>
+        <p class="lede">The compiler reads the cloth pick by pick, the way a tapestry weaver meets it. Every run of one colour in a pick is a bobbin to pass.</p>
+        <div class="stats" id="stats"></div>
+        <div class="chart-wrap">
+          <canvas id="chart" class="chart" tabindex="0" aria-label="Loom chart: the design as graph paper with bobbins per pick. Up and down arrows choose a pick."></canvas>
+        </div>
+        <div class="ledger" id="ledgerRow" aria-live="polite"></div>
+        <fieldset class="opt"><legend>Loomability optimiser</legend>
+          <p class="note">Merges colour runs where the eye will barely notice, solving each pick exactly as a 1-D Potts problem by dynamic programming. Borders are never touched.</p>
+          <label class="check"><input type="checkbox" id="optOn" /> Apply to the cloth</label>
+          <label class="field"><span class="label">λ · price of one more bobbin <output id="lamOut"></output></span><input type="range" id="optLambda" min="0" max="160" step="2" value="60" /></label>
+          <label class="field"><span class="label">μ · keep figures upright <output id="muOut"></output></span><input type="range" id="optMu" min="0" max="80" step="2" value="12" /></label>
+          <p class="note mono" id="optStat" aria-live="polite"></p>
+        </fieldset>
+      </div>
+
+      <!-- 4 · Keep -->
+      <div class="pane" role="tabpanel" id="pane-library" aria-labelledby="tab-library" hidden>
+        <form class="row" id="saveForm">
+          <label class="field grow"><span class="label">Name this cloth</span><input id="saveName" maxlength="60" placeholder="e.g. Aaji's Diwali padar" /></label>
+          <button class="btn gold" type="submit">Keep</button>
+        </form>
+        <p class="note" id="saveStat" aria-live="polite"></p>
+        <ul class="library" id="library"></ul>
+        <h3 class="h3">Take it with you</h3>
+        <div class="row wrap">
+          <button class="btn" data-export="png">Render · PNG</button>
+          <button class="btn" data-export="svg">Naksha · SVG</button>
+          <button class="btn" data-export="csv">Ledger · CSV</button>
+          <button class="btn" data-export="json">Draft · JSON</button>
+        </div>
+        <h3 class="h3">Rendering</h3>
+        <label class="field"><span class="label">Quality</span>
+          <select id="quality"><option value="auto">Adaptive</option><option value="high">High</option><option value="low">Low (battery)</option></select>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <article class="notes" id="notes">
+    <header class="notes-head">
+      <p class="kicker">Field notes</p>
+      <h2><em>The cloth is a program</em> the hand runs once.</h2>
+    </header>
+    <div class="cols">
+      <section>
+        <h3><span class="dev">१</span> Tapestry, not brocade</h3>
+        <p>Paithani figures are woven in tapestry: the colour of a figure is the weft itself, laid in by hand, a separate small bobbin for each patch of colour in a row. Where two colours meet, the weavers can interlock the wefts (<em>kadiyal</em>), so the back is almost as clean as the front. That makes every design a counting problem. A peacock in four colours on a zari ground is not one pass of the shuttle but dozens of short passes, every row.</p>
+      </section>
+      <section>
+        <h3><span class="dev">२</span> What the compiler counts</h3>
+        <p>For each pick (row) it run-length encodes the weft: runs = bobbins. It also counts joins between runs, single-end runs that are fragile under the beater, and boundaries that stay at the same end for six or more picks (the places a simple split tapestry would open a slit). The <em>effort index</em> is an illustrative model: a plain pick costs 1, and each extra bobbin adds 0.5. It is an assumption for comparing designs, not a measurement of anyone's labour.</p>
+      </section>
+      <section>
+        <h3><span class="dev">३</span> The optimiser</h3>
+        <p>For one pick with design colours <span class="mono">c₁…cₙ</span> we choose thread labels <span class="mono">ℓ₁…ℓₙ</span> minimising <span class="mono">Σ ΔE(cᵢ,ℓᵢ) + λ·#changes + μ·Σ[upright break]</span>. ΔE is CIELAB distance with a penalty for swapping silk and metal. This is a 1-D Potts model; a dynamic program over position × label solves it exactly in O(n·K). Picks are solved top to bottom, each conditioned on the one above. The brute-force check in the test suite agrees with it on random rows.</p>
+      </section>
+      <section>
+        <h3><span class="dev">४</span> Why the silk turns</h3>
+        <p>The renderer resolves every cell into plain-weave interlacement. Warp threads run lengthwise, weft threads across, and each gets a cylindrical profile and Kajiya–Kay anisotropic highlights along its own direction. When warp and weft are different colours, the highlight passes from one set of threads to the other as the lamp or your view moves. That is how shot silk shifts colour in real cloth, and here it is computed rather than painted. Zari takes a sharper, metal-tinted highlight.</p>
+      </section>
+    </div>
+    <p class="honest">One cell here stands for a bundle of threads; a real sari has thousands of ends and takes weeks to months to weave. The colour names follow the traditional Paithani vocabulary (aboli, firozi, kalichandrakala, morpankhi, motia, neeligunji, pophali, sankirodak, uddani, vangi); the shades are this project's interpretation. All motifs are original geometric drawings. Nothing here is a reproduction of any particular sari, weaver or workshop.</p>
+  </article>
+
+  <footer class="foot">
+    <p>Original work by Shriya Shekatkar · SHRIYA.EXE · Synthetic or demo data is labeled as such. Not affiliated with any film, studio or company.</p>
+    <p><a href="https://shriyashekatkar25-byte.github.io/shriya-exe/">Studio gallery →</a> · <a href="https://github.com/shriyashekatkar25-byte/paithani-loom">Source</a></p>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
